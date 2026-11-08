@@ -142,9 +142,9 @@ details.fullstate[open] { display: grid; gap: 8px; }
 <!-- INTRO -->
 <section id="intro" class="wrap">
   <div class="prose">
-    <p class="label">Stanford student-path study · about 20–25 minutes</p>
+    <p class="label">Stanford student-path study · about 15 minutes</p>
     <h1>How realistic are these simulated Stanford paths?</h1>
-    <p>We built a simulator of four years at Stanford. You'll judge what it produces.</p>
+    <p>We built a simulator of four years at Stanford. You'll judge what it produces. Finish for a chance to win a $50 Amazon gift card.</p>
   </div>
   <div class="parts">
     <div class="card">
@@ -176,12 +176,12 @@ details.fullstate[open] { display: grid; gap: 8px; }
   <div class="card prose">
     <h2>Consent</h2>
     <div id="consent-text" class="prose small">
-      <p>This study is run by Stanford researchers studying how well AI simulators model students' choices and outcomes. You'll compare simulated student paths and rate how realistic they are. It takes about 20–25 minutes.</p>
+      <p>This study is run by Stanford researchers studying how well AI simulators model students' choices and outcomes. You'll compare simulated student paths and rate how realistic they are. It takes about 15 minutes.</p>
       <ul class="steps">
         <li><b>Voluntary:</b> taking part is your choice, and you can stop at any time by closing the page. There is no penalty for stopping.</li>
         <li><b>Risks and benefits:</b> no risks beyond everyday computer use. There's no direct benefit to you; your answers help evaluate research on AI simulation.</li>
         <li><b>What we record:</b> your ratings and comments, your answers to the three questions below (year, area of study, career interest), how long each screen takes, and your browser type. Your ratings are not linked to your name or email.</li>
-        <li><b>Gift card drawing:</b> at the end you can optionally enter your name and email for a gift card drawing. They're stored separately from your ratings, used only to run the drawing and contact the winner, and deleted after the drawing.</li>
+        <li><b>Gift card drawing:</b> at the end you can optionally enter your name and email for a drawing for a <b>$50 Amazon gift card</b>. They're stored separately from your ratings, used only to run the drawing and contact the winner, and deleted after the drawing.</li>
         <li><b>How it's used:</b> responses are stored in a private spreadsheet that only the research team can see, and results are reported only in aggregate, for example in a research paper.</li>
         <li><b>Questions:</b> contact the researcher who shared this link with you.</li>
       </ul>
@@ -190,7 +190,7 @@ details.fullstate[open] { display: grid; gap: 8px; }
   </div>
   <div class="card prose">
     <h2>About you</h2>
-    <div class="field"><label for="pid" id="pid-label">Participant number (filled in from your study link)</label><input type="text" id="pid" inputmode="numeric" autocomplete="off"></div>
+    <div class="field"><label for="pid" id="pid-label">Your participant number (assigned automatically; nothing to do)</label><input type="text" id="pid" readonly tabindex="-1" autocomplete="off"></div>
     <div class="field"><label for="year">Your year</label>
       <select id="year"><option value="">Choose…</option><option>Frosh</option><option>Sophomore</option><option>Junior</option><option>Senior</option><option>Coterm / 5th year</option><option>Graduate student</option><option>Other</option></select></div>
     <div class="field"><label for="area">Main area of study</label>
@@ -244,7 +244,7 @@ details.fullstate[open] { display: grid; gap: 8px; }
 <section id="more" class="wrap" hidden>
   <div class="card prose">
     <h2>You're done. Thank you!</h2>
-    <p>Your answers are saved. If you have a few more minutes, up to 6 extra comparisons would help a lot (about 3 minutes each). You can stop after any of them.</p>
+    <p>Your answers are saved. If you have a few more minutes, up to 6 extra comparisons would help a lot (about a minute or two each). You can stop after any of them.</p>
     <div class="row"><button class="primary" id="more-yes">Do more comparisons</button><button id="more-no">Finish</button></div>
   </div>
 </section>
@@ -261,8 +261,8 @@ details.fullstate[open] { display: grid; gap: 8px; }
     </div>
   </div>
   <div class="card prose" id="drawing">
-    <h2>Gift card drawing (optional)</h2>
-    <p class="small">To enter the drawing, leave your name and email. They're stored separately from your ratings and are used only to run the drawing and contact the winner.</p>
+    <h2>Win a $50 Amazon gift card (optional)</h2>
+    <p class="small">To enter the drawing for a $50 Amazon gift card, leave your name and email. They're stored separately from your ratings and are used only to run the drawing and contact the winner.</p>
     <div class="field"><label for="d-name">Name</label><input type="text" id="d-name" autocomplete="name"></div>
     <div class="field"><label for="d-email">Email</label><input type="text" id="d-email" inputmode="email" autocomplete="email"></div>
     <p id="d-status" class="small" aria-live="polite"></p>
@@ -297,6 +297,7 @@ const SOURCE = params.get("src") || (urlPid ? "link" : "general");
 if (params.get("reset")) { try { localStorage.removeItem("spstudy:state"); } catch (e) {} }
 let state = store.get("state") || null;
 if (urlPid) $("pid").value = urlPid; else if (state && state.pid) $("pid").value = state.pid;
+$("pid").readOnly = true;
 
 function planFor(pid) {
   const n = SCHED.rotating.length, idx = ((pid - 1) % 1000 + 1000) % 1000;
@@ -322,10 +323,11 @@ function planFor(pid) {
 
 let warnedOffline = false;
 async function startStudy() {
+  if (assigning) await assigning;
   const pid = parseInt($("pid").value, 10);
   const err = [];
   if (!$("consent").checked) err.push("Please confirm consent.");
-  if (!(pid > 0)) err.push("Please enter your participant number.");
+  if (!(pid > 0)) err.push("We couldn't assign a participant number. Please reload the page.");
   if (!$("year").value || !$("area").value || !$("path").value) err.push("Please answer the three questions about you.");
   if (err.length) { $("intro-err").textContent = err.join(" "); $("intro-err").hidden = false; return; }
   if (!state || state.pid !== pid) {
@@ -719,7 +721,8 @@ async function autoAssign() {
   $("pid").value = pid; $("pid").readOnly = true;
   $("pid-label").textContent = "Your participant number (assigned automatically; nothing to do)";
 }
-if (!urlPid && !(state && state.pid)) autoAssign();
+let assigning = null;
+if (!urlPid && !(state && state.pid)) assigning = autoAssign();
 if (state && state.pid && (state.answers.length || state.finished)) {
   // Resume where this browser left off, and re-send anything that didn't save last time.
   $("pid").value = state.pid; $("consent").checked = true;
