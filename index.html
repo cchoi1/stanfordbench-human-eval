@@ -53,6 +53,8 @@ textarea { min-height: 64px; resize: vertical; }
 
 /* progress */
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+#save-status[data-kind="fail"] { color: var(--bad); font-weight: 600; }
+#save-status[data-kind="ok"] { color: var(--good); }
 .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; flex: 1 1 200px; max-width: 320px; }
 .bar > i { display: block; height: 100%; background: var(--accent); }
 
@@ -191,6 +193,7 @@ details.fullstate[open] { display: grid; gap: 8px; }
 <section id="screen" class="wrap" hidden>
   <div class="topbar">
     <p class="label" id="progress-label"></p>
+    <p id="save-status" class="small muted" aria-live="polite"></p>
     <div class="bar" aria-hidden="true"><i id="progress-fill"></i></div>
   </div>
   <div class="card student">
@@ -241,7 +244,7 @@ details.fullstate[open] { display: grid; gap: 8px; }
     <div id="fallback" hidden class="prose">
       <p>Please copy the code below and send it to the researcher, so your answers aren't lost.</p>
       <div class="codebox" id="code"></div>
-      <div><button id="copy">Copy code</button> <span id="copied" class="muted small"></span></div>
+      <div class="row"><button class="primary" id="resend">Try saving again</button><button id="copy">Copy code</button> <span id="copied" class="muted small"></span></div>
     </div>
   </div>
 </section>
@@ -295,7 +298,8 @@ function planFor(pid) {
   return { required, part2: p2, extra, flips };
 }
 
-function startStudy() {
+let warnedOffline = false;
+async function startStudy() {
   const pid = parseInt($("pid").value, 10);
   const err = [];
   if (!$("consent").checked) err.push("Please confirm consent.");
@@ -307,6 +311,20 @@ function startStudy() {
     state = { pid, plan, about: { year: $("year").value, area: $("area").value, path: $("path").value },
       started: new Date().toISOString(), queue: plan.required.slice(), answers: [], extra: false, finished: false, ua: navigator.userAgent };
     store.set("state", state);
+  }
+  // Check saving works before they put in 30 minutes. If it doesn't, say so now; a second click continues anyway.
+  if (SAVING && !state.saved_once && !warnedOffline) {
+    $("start").disabled = true; $("start").textContent = "Checking your connection…";
+    const ok = await send(false);
+    $("start").disabled = false;
+    if (ok) { state.saved_once = true; store.set("state", state); }
+    else {
+      warnedOffline = true;
+      $("start").textContent = "Continue anyway";
+      $("intro-err").textContent = "Your browser couldn't reach our save server. This is usually an ad or privacy blocker: please pause it for this page and try again, or open the link in a different browser. You can also continue anyway and send us a code at the end.";
+      $("intro-err").hidden = false;
+      return;
+    }
   }
   next();
 }
@@ -544,12 +562,50 @@ function savePair() {
   next();
 }
 
-function payload(final) { return { study: "career_planning_final_v1", build: DATA.build, pid: state.pid, about: state.about, started: state.started, final, ua: state.ua, answers: state.answers }; }
+function payload(final) { return { study: "career_planning_final_v1", build: DATA.build, pid: state.pid, about: state.about, started: state.started, final, ua: state.ua, answers: state.answers, send_log: state.send_log || [] }; }
 
-function send(final) {
-  if (!SUBMIT_URL || SUBMIT_URL.startsWith("__")) return Promise.resolve(false);
-  return fetch(SUBMIT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload(final)) })
-    .then(() => true).catch(() => false);
+// Saving. Each save sends everything answered so far. The request uses CORS so the page can read the
+// script's "ok" reply and know the row landed (a blind no-cors post cannot tell). Failures are retried,
+// written into send_log (which travels in the payload and the copy code), and retried on the next load.
+const SAVING = !!SUBMIT_URL && !SUBMIT_URL.startsWith("__");
+async function postOnce(body) {
+  const r = await fetch(SUBMIT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body });
+  const t = await r.text();
+  if (!r.ok || t.trim() !== "ok") throw new Error(`HTTP ${r.status}: ${t.slice(0, 80)}`);
+}
+function logSend(msg) {
+  state.send_log = (state.send_log || []).slice(-19);
+  state.send_log.push({ at: new Date().toISOString(), msg });
+  store.set("state", state);
+}
+function setSaveStatus(kind) {
+  const el_ = $("save-status");
+  if (!el_) return;
+  el_.dataset.kind = kind;
+  el_.textContent = kind === "ok" ? `Answers saved (${state.saved_answers || 0})`
+    : kind === "fail" ? "Not saved yet. We'll keep trying; if this stays, pause any ad or privacy blocker for this page."
+    : kind === "saving" ? "Saving…" : "Preview: answers are not sent anywhere";
+}
+async function send(final) {
+  if (!SAVING) { setSaveStatus("off"); return false; }
+  const n = state.answers.length, body = JSON.stringify(payload(final));
+  setSaveStatus("saving");
+  for (const wait of [0, 1500, 4000, 9000]) {
+    if (wait) await new Promise(r => setTimeout(r, wait));
+    try {
+      await postOnce(body);
+      state.saved_answers = Math.max(state.saved_answers || 0, n);
+      if (final) state.saved_final = true;
+      store.set("state", state); setSaveStatus("ok");
+      return true;
+    } catch (e) { logSend(`fetch failed: ${(e && e.message) || e}`); }
+  }
+  // Last resort: a beacon can't confirm receipt, but some blockers treat it differently from fetch.
+  try {
+    if (navigator.sendBeacon && navigator.sendBeacon(SUBMIT_URL, new Blob([body], { type: "text/plain;charset=utf-8" }))) logSend("beacon queued (unconfirmed)");
+  } catch (e) { logSend(`beacon failed: ${e}`); }
+  setSaveStatus("fail");
+  return false;
 }
 
 $("p2-start").addEventListener("click", () => { state.p2_intro_seen = true; store.set("state", state); next(); });
@@ -566,15 +622,19 @@ async function finish() {
   }
   $("done-status").textContent = "Sending your answers…";
   const ok = await send(true);
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify(payload(true)))));
-  $("code").textContent = code;
+  showDone(ok);
+}
+function showDone(ok) {
+  $("code").textContent = btoa(unescape(encodeURIComponent(JSON.stringify(payload(true)))));
   if (ok) {
-    $("done-status").textContent = `Your ${state.answers.length} comparisons were sent. You can close this page.`;
+    $("done-status").textContent = `Your ${state.answers.length} comparisons were saved. You can close this page.`;
+    $("fallback").hidden = true;
   } else {
-    $("done-status").textContent = "We couldn't send your answers automatically.";
+    $("done-status").textContent = SAVING ? "We couldn't save your answers automatically. Please try again, or send us the code below." : "This preview doesn't send answers. The code below holds them.";
     $("fallback").hidden = false;
   }
 }
+$("resend").addEventListener("click", async () => { $("done-status").textContent = "Saving…"; showDone(await send(true)); });
 $("copy").addEventListener("click", () => {
   const t = $("code").textContent;
   navigator.clipboard.writeText(t).then(() => { $("copied").textContent = "Copied."; }).catch(() => {
@@ -585,9 +645,10 @@ $("copy").addEventListener("click", () => {
 
 $("start").addEventListener("click", startStudy);
 if (state && state.pid && (state.answers.length || state.finished)) {
-  // Resume where this browser left off.
+  // Resume where this browser left off, and re-send anything that didn't save last time.
   $("pid").value = state.pid; $("consent").checked = true;
   $("year").value = state.about.year; $("area").value = state.about.area; $("path").value = state.about.path;
+  if (SAVING && ((state.saved_answers || 0) < state.answers.length || (state.finished && !state.saved_final))) send(state.finished);
 }
 </script>
 </body>
