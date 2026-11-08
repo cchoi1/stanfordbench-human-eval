@@ -180,7 +180,8 @@ details.fullstate[open] { display: grid; gap: 8px; }
       <ul class="steps">
         <li><b>Voluntary:</b> taking part is your choice, and you can stop at any time by closing the page. There is no penalty for stopping.</li>
         <li><b>Risks and benefits:</b> no risks beyond everyday computer use. There's no direct benefit to you; your answers help evaluate research on AI simulation.</li>
-        <li><b>What we record:</b> your ratings and comments, your answers to the three questions below (year, area of study, career interest), how long each screen takes, and your browser type. We don't ask for your name or email.</li>
+        <li><b>What we record:</b> your ratings and comments, your answers to the three questions below (year, area of study, career interest), how long each screen takes, and your browser type. Your ratings are not linked to your name or email.</li>
+        <li><b>Gift card drawing:</b> at the end you can optionally enter your name and email for a gift card drawing. They're stored separately from your ratings, used only to run the drawing and contact the winner, and deleted after the drawing.</li>
         <li><b>How it's used:</b> responses are stored in a private spreadsheet that only the research team can see, and results are reported only in aggregate, for example in a research paper.</li>
         <li><b>Questions:</b> contact the researcher who shared this link with you.</li>
       </ul>
@@ -258,6 +259,14 @@ details.fullstate[open] { display: grid; gap: 8px; }
       <div class="codebox" id="code"></div>
       <div class="row"><button class="primary" id="resend">Try saving again</button><button id="copy">Copy code</button> <span id="copied" class="muted small"></span></div>
     </div>
+  </div>
+  <div class="card prose" id="drawing">
+    <h2>Gift card drawing (optional)</h2>
+    <p class="small">To enter the drawing, leave your name and email. They're stored separately from your ratings and are used only to run the drawing and contact the winner.</p>
+    <div class="field"><label for="d-name">Name</label><input type="text" id="d-name" autocomplete="name"></div>
+    <div class="field"><label for="d-email">Email</label><input type="text" id="d-email" inputmode="email" autocomplete="email"></div>
+    <p id="d-status" class="small" aria-live="polite"></p>
+    <div><button class="primary" id="d-submit">Enter the drawing</button></div>
   </div>
 </section>
 
@@ -664,6 +673,22 @@ function showDone(ok) {
     $("fallback").hidden = false;
   }
 }
+// Drawing entry: name and email go in a separate post with no participant number, so they can't be
+// joined to the ratings. The sheet script files these under a separate "drawing" tab.
+$("d-submit").addEventListener("click", async () => {
+  const name = $("d-name").value.trim(), email = $("d-email").value.trim();
+  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { $("d-status").textContent = "Please enter your name and a valid email."; $("d-status").className = "small err"; return; }
+  if (!SAVING) { $("d-status").textContent = "This preview doesn't send entries."; return; }
+  $("d-submit").disabled = true; $("d-status").className = "small"; $("d-status").textContent = "Sending…";
+  const body = JSON.stringify({ kind: "drawing", name, email, source: SOURCE, at: new Date().toISOString() });
+  let ok = false;
+  for (const wait of [0, 1500, 4000]) {
+    if (wait) await new Promise(r => setTimeout(r, wait));
+    try { await postOnce(body); ok = true; break; } catch (e) {}
+  }
+  if (ok) { $("d-status").textContent = "You're entered. Thank you!"; $("d-name").disabled = $("d-email").disabled = true; }
+  else { $("d-submit").disabled = false; $("d-status").className = "small err"; $("d-status").textContent = "Couldn't send your entry. Please try again in a moment."; }
+});
 $("resend").addEventListener("click", async () => { $("done-status").textContent = "Saving…"; showDone(await send(true)); });
 $("copy").addEventListener("click", () => {
   const t = $("code").textContent;
