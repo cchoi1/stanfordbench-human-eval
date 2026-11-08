@@ -180,7 +180,7 @@ details.fullstate[open] { display: grid; gap: 8px; }
   </div>
   <div class="card prose">
     <h2>About you</h2>
-    <div class="field"><label for="pid">Participant number (it's filled in if you used your study link; otherwise ask the researcher)</label><input type="text" id="pid" inputmode="numeric" autocomplete="off"></div>
+    <div class="field"><label for="pid" id="pid-label">Participant number (filled in from your study link)</label><input type="text" id="pid" inputmode="numeric" autocomplete="off"></div>
     <div class="field"><label for="year">Your year</label>
       <select id="year"><option value="">Choose…</option><option>Frosh</option><option>Sophomore</option><option>Junior</option><option>Senior</option><option>Coterm / 5th year</option><option>Graduate student</option><option>Other</option></select></div>
     <div class="field"><label for="area">Main area of study</label>
@@ -273,6 +273,8 @@ function shuffle(a, r) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) {
 
 const params = new URLSearchParams(location.search);
 const urlPid = params.get("r") || params.get("p") || (location.hash.match(/^#r(\d+)$/) || [])[1];
+// Where this rater came from: ?src=… if given, else "link" for a personal numbered link, "general" otherwise.
+const SOURCE = params.get("src") || (urlPid ? "link" : "general");
 // ?reset=1 clears this browser's saved progress (for testing the page).
 if (params.get("reset")) { try { localStorage.removeItem("spstudy:state"); } catch (e) {} }
 let state = store.get("state") || null;
@@ -310,7 +312,7 @@ async function startStudy() {
   if (err.length) { $("intro-err").textContent = err.join(" "); $("intro-err").hidden = false; return; }
   if (!state || state.pid !== pid) {
     const plan = planFor(pid);
-    state = { pid, plan, build: DATA.build, about: { year: $("year").value, area: $("area").value, path: $("path").value },
+    state = { pid, plan, build: DATA.build, source: SOURCE, about: { year: $("year").value, area: $("area").value, path: $("path").value },
       started: new Date().toISOString(), queue: plan.required.slice(), answers: [], extra: false, finished: false, ua: navigator.userAgent };
     store.set("state", state);
   }
@@ -581,7 +583,7 @@ function savePair() {
   next();
 }
 
-function payload(final) { return { study: "career_planning_final_v1", build: DATA.build, pid: state.pid, about: state.about, started: state.started, final, ua: state.ua, answers: state.answers, send_log: state.send_log || [] }; }
+function payload(final) { return { study: "career_planning_final_v1", build: DATA.build, source: state.source || SOURCE, pid: state.pid, about: state.about, started: state.started, final, ua: state.ua, answers: state.answers, send_log: state.send_log || [] }; }
 
 // Saving. Each save sends everything answered so far. The request uses CORS so the page can read the
 // script's "ok" reply and know the row landed (a blind no-cors post cannot tell). Failures are retried,
@@ -663,6 +665,27 @@ $("copy").addEventListener("click", () => {
 });
 
 $("start").addEventListener("click", startStudy);
+
+// General link (no number in it): assign a participant number. Ask the response sheet's script for the
+// next number in sequence; if that isn't available, pick a random one from 1000-999999. The number is
+// kept in this browser so a reload doesn't change it.
+async function autoAssign() {
+  let pid = null;
+  try { pid = parseInt(localStorage.getItem("spstudy:auto_pid"), 10) || null; } catch (e) {}
+  if (!pid && SAVING) {
+    try {
+      const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 4000);
+      const r = await fetch(SUBMIT_URL + "?next=1", { signal: ctl.signal }); clearTimeout(timer);
+      const j = JSON.parse(await r.text());
+      if (j && j.pid > 0) pid = j.pid;
+    } catch (e) {}
+  }
+  if (!pid) pid = 1000 + Math.floor(Math.random() * 999000);
+  try { localStorage.setItem("spstudy:auto_pid", String(pid)); } catch (e) {}
+  $("pid").value = pid; $("pid").readOnly = true;
+  $("pid-label").textContent = "Your participant number (assigned automatically; nothing to do)";
+}
+if (!urlPid && !(state && state.pid)) autoAssign();
 if (state && state.pid && (state.answers.length || state.finished)) {
   // Resume where this browser left off, and re-send anything that didn't save last time.
   $("pid").value = state.pid; $("consent").checked = true;
