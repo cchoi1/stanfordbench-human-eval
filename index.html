@@ -96,7 +96,9 @@ details.fullstate[open] { display: grid; gap: 8px; }
 .time { font-size: .86rem; color: var(--muted); }
 .acts { margin: 0; padding-left: 1.1em; display: grid; gap: 3px; font-size: .93rem; }
 .res { font-weight: 700; white-space: nowrap; }
-.res { color: var(--ink); }
+.res { font-weight: 700; }
+.res.ok { color: var(--good); }
+.res.no { color: var(--bad); }
 .flags { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .9rem; }
 .flags label { display: inline-flex; gap: 6px; align-items: center; }
 .flaggrp { display: grid; gap: 4px; }
@@ -404,7 +406,7 @@ function yearSummary(qs) {
   const did = [], took = [];
   for (const q of qs) {
     for (const a of q.actions) {
-      if (["apply", "submit", "compete", "test", "found", "major"].includes(a.kind)) did.push(a.result ? `${a.text} → ${a.result}` : a.text);
+      if (["apply", "submit", "compete", "test", "found", "major"].includes(a.kind)) did.push({ text: a.text, result: a.result });
       else if (a.kind === "accept") took.push(a.text);
     }
     for (const r of q.received) took.push(r);
@@ -441,14 +443,14 @@ function renderTraj(tid, side, name) {
     const sm = yearSummary(qs);
     const sumLine = el("span", { class: "ysum" },
       el("span", { class: "ynotes", text: sm.weekly }),
-      sm.did.length ? el("ul", { class: "ylist" }, ...sm.did.map(t => el("li", { text: t }))) : el("span", { class: "ynotes", text: "No applications, submissions or tests this year." }),
+      sm.did.length ? el("ul", { class: "ylist" }, ...sm.did.map(d => el("li", {}, d.text, d.result ? " → " : "", d.result ? el("span", { class: "res " + (isWin(d.result) ? "ok" : "no"), text: d.result }) : null))) : el("span", { class: "ynotes", text: "No applications, submissions or tests this year." }),
       sm.took.length ? el("ul", { class: "ylist ytook" }, ...sm.took.map(t => el("li", { text: t }))) : null);
     const d = el("details", { class: "year" }, el("summary", {}, el("span", { class: "yname", text: `Year ${y + 1}` }), sumLine));
     for (const q of qs) {
       const tm = q.time;
       const time = `About ${tm.busy} h/week on classes, work and activities, mostly ` + tm.top.map(x => `${x[0].toLowerCase()} ${x[1]}h`).join(", ") + ` · sleeps ~${Math.round(tm.sleep_per_night)}h a night`;
       const acts = el("ul", { class: "acts" });
-      for (const a of q.actions) if (a.kind !== "hidden") acts.append(el("li", {}, a.text, a.result ? " → " : "", a.result ? el("span", { class: "res", text: a.result }) : null));
+      for (const a of q.actions) if (a.kind !== "hidden") acts.append(el("li", {}, a.text, a.result ? " → " : "", a.result ? el("span", { class: "res " + (isWin(a.result) ? "ok" : "no"), text: a.result }) : null));
       for (const r of q.received) acts.append(el("li", { class: "recv", text: r }));
       const [head, rest] = firstSentences(q.narrative, 2);
       const narr = el("p", { class: "narr" }, head);
