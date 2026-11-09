@@ -157,7 +157,7 @@ details.fullstate[open] { display: grid; gap: 8px; }
     </div>
     <div class="card">
       <p class="label">Part 2 · 7 comparisons · ~1 min each</p>
-      <p>The same student making the <b>same choices</b>; only what happened differs: <b>Version A</b> and <b>Version B</b>.</p>
+      <p>The same student with the <b>same weekly schedule and the same applications</b>; only what happened differs: <b>Version A</b> and <b>Version B</b>.</p>
       <ul class="steps">
         <li>Pick which version is <b>more realistic</b>.</li>
       </ul>
@@ -218,7 +218,7 @@ details.fullstate[open] { display: grid; gap: 8px; }
       <div id="s-profile" class="profile"></div>
     </details>
   </div>
-  <p id="mode-note" class="goal" hidden>Part 2: both versions show this student making exactly the same choices. Only what happened differs. Which version is more believable?</p>
+  <p id="mode-note" class="goal" hidden>Part 2: both versions give this student the same weekly schedule and the same applications. What differs is what happened as a result, including which offers came in and so which ones the student accepted. Which version is more believable?</p>
   <div class="tabs" role="group" aria-label="Choose which path to read">
     <button id="tab-left" aria-pressed="true">Path A</button>
     <button id="tab-right" aria-pressed="false">Path B</button>
@@ -231,8 +231,8 @@ details.fullstate[open] { display: grid; gap: 8px; }
 <section id="part2" class="wrap" hidden>
   <div class="card prose">
     <p class="label">Part 1 done</p>
-    <h2>Part 2: same choices, two versions of what happened</h2>
-    <p>Nice work. Part 2 has a different question. Each screen again shows one student, but this time both columns describe the <b>same choices</b>: the same classes, hours and applications. They differ only in <b>what happened as a result</b>, as told by two different versions of the simulator.</p>
+    <h2>Part 2: same plans, two versions of what happened</h2>
+    <p>Nice work. Part 2 has a different question. Each screen again shows one student, but this time both columns start from the <b>same plans</b>: the same weekly schedule and the same applications, submissions and tests. They differ only in <b>what happened as a result</b>, as told by two different versions of the simulator. Because the offers can differ, the offers each version's student accepts can differ too.</p>
     <p>For each screen, pick the version whose outcomes are <b>more realistic</b> for a real Stanford student who made those choices. You don't need to judge who is better off here.</p>
     <div><button class="primary" id="p2-start">Start Part 2</button></div>
   </div>
@@ -558,7 +558,7 @@ function renderPair(pid) {
       n > P1 + nP2 ? el("button", { id: "stop-now", text: "Skip this one and finish" }) : null)];
   if (p2) rate.replaceChildren(
     el("h2", { text: "Your rating" }),
-    scaleQ("realer", "Both versions show the same student making the same choices. Which version of what happened is more realistic? Consider the whole record (offers, rejections, where they end up, whether they graduate), not just the final outcome.",
+    scaleQ("realer", "Both versions show the same student with the same schedule and applications. Which version of what happened is more realistic? Consider the whole record (offers, rejections, where they end up, whether they graduate), not just the final outcome.",
       [["A", "Version A", ""], ["same", "About the same", ""], ["B", "Version B", ""]]),
     flags("a", "Version A"), flags("b", "Version B"), ...tail);
   else rate.replaceChildren(
