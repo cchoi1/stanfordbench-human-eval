@@ -97,7 +97,14 @@ details.fullstate[open] { display: grid; gap: 8px; }
 .time { font-size: .86rem; color: var(--muted); }
 details.recorded-action { min-width: 0; }
 details.recorded-action > summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
-.recorded-action pre { margin: 6px 0 0; padding: 10px; border: 1px solid var(--line); border-radius: 8px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .82rem; }
+.recorded-body { margin-top: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: .88rem; overflow-wrap: anywhere; }
+.recorded-body h3 { font: inherit; font-weight: 700; margin: 0 0 4px; }
+.recorded-body h3:not(:first-child) { margin-top: 12px; }
+.recorded-list { display: grid; gap: 6px; margin: 0; padding-left: 1.25em; }
+.recorded-fields { margin: 2px 0 0; }
+.recorded-fields > div { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 0 8px; }
+.recorded-fields dt { color: var(--muted); }
+.recorded-fields dd { margin: 0; min-width: 0; white-space: pre-wrap; }
 .acts { margin: 0; padding-left: 1.1em; display: grid; gap: 3px; font-size: .93rem; }
 .res { font-weight: 700; white-space: nowrap; }
 .res { font-weight: 700; }
@@ -465,6 +472,54 @@ function yearSummary(qs) {
   return { weekly, did, took, tally: { n: res.length, won, lost: res.length - won } };
 }
 
+function actionLabel(key) {
+  const label = key.replaceAll("_", " ");
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function recordedValue(value) {
+  if (Array.isArray(value)) {
+    return value.length
+      ? el("ul", { class: "recorded-list" }, ...value.map(item => el("li", {}, recordedValue(item))))
+      : "Empty list";
+  }
+  if (value !== null && typeof value === "object") {
+    const fields = Object.entries(value);
+    return fields.length ? recordedFields(fields) : "No fields recorded";
+  }
+  if (value === null) return "Null";
+  return value === "" ? "Empty text" : String(value);
+}
+
+function recordedFields(fields) {
+  return el("dl", { class: "recorded-fields" }, ...fields.map(([key, value]) =>
+    el("div", {}, el("dt", { text: actionLabel(key) }), el("dd", {}, recordedValue(value)))));
+}
+
+function activityEntry(name, value) {
+  const fields = typeof value === "number" ? { hours: value } : value;
+  const { hours, ...details } = fields;
+  const heading = hours === undefined ? actionLabel(name) : `${actionLabel(name)} · ${hours} h/week`;
+  const entries = Object.entries(details);
+  return el("li", {}, el("strong", { text: heading }), entries.length ? recordedFields(entries) : null);
+}
+
+function recordedActions(action) {
+  const activities = Object.entries(action.time_allocation).flatMap(([name, value]) =>
+    (Array.isArray(value) ? value : [value]).map(entry => activityEntry(name, entry)));
+  const actions = action.structural_actions.map(({ name, args }) => {
+    const fields = Object.entries(args);
+    return el("li", {}, el("strong", { text: actionLabel(name) }), fields.length ? recordedFields(fields) : null);
+  });
+  return el("details", { class: "recorded-action" },
+    el("summary", { text: "Exact actions and weekly hours" }),
+    el("div", { class: "recorded-body" },
+      el("h3", { text: "Weekly time allocation" }),
+      activities.length ? el("ul", { class: "recorded-list" }, ...activities) : el("p", { text: "No hours recorded." }),
+      el("h3", { text: "Actions taken this quarter" }),
+      actions.length ? el("ol", { class: "recorded-list" }, ...actions) : el("p", { text: "No actions recorded." })));
+}
+
 function renderTraj(tid, side, name, p2) {
   const t = DATA.trajectories[tid];
   const color = getComputedStyle(document.documentElement).getPropertyValue(side === "left" ? "--a" : "--b").trim();
@@ -507,9 +562,7 @@ function renderTraj(tid, side, name, p2) {
       const acts = el("ul", { class: "acts" });
       for (const a of q.actions) if (a.kind !== "hidden") acts.append(el("li", {}, a.text, a.result ? " → " : "", a.result ? el("span", { class: "res " + (isWin(a.result) ? "ok" : "no"), text: a.result }) : null));
       for (const r of q.received) acts.append(el("li", { class: "recv", text: r }));
-      const recorded = el("details", { class: "recorded-action" },
-        el("summary", { text: "Exact actions and weekly hours" }),
-        el("pre", { text: JSON.stringify(q.recorded_action, null, 2) }));
+      const recorded = recordedActions(q.recorded_action);
       const [head, rest] = firstSentences(q.narrative, 2);
       const narr = el("p", { class: "narr" }, head);
       if (rest) {
