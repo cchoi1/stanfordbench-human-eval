@@ -167,8 +167,7 @@ details.recorded-action > summary { cursor: pointer; color: var(--accent); font-
       <p class="label" id="part1-count">Part 1 · 8 comparisons · ~1–2 min each</p>
       <p>The same student, two different sets of choices: <b>Path A</b> and <b>Path B</b>.</p>
       <ul class="steps">
-        <li>Rate how <b>realistic</b> each path is (1–5).</li>
-        <li>Pick which student ended up <b>better off</b>, given their goals.</li>
+        <li>Predict which path would leave the student <b>better off</b>, given their starting profile and choices.</li>
       </ul>
     </div>
     <div class="card">
@@ -613,6 +612,30 @@ function pairedOutcomes(left, right) {
   ];
 }
 
+function renderPolicyTrajectory(tid, side, name) {
+  const { quarters } = DATA.trajectories[tid];
+  const years = [];
+  for (let year = 0; year < 4; year++) {
+    const details = el("details", { class: "year" },
+      el("summary", {}, el("span", { class: "yname", text: `Year ${year + 1}` })));
+    for (const quarter of quarters.slice(year * 4, year * 4 + 4)) {
+      const choices = quarter.recorded_action
+        ? recordedActions(quarter.recorded_action)
+        : el("div", {},
+            el("p", { text: quarter.time.top.map(([name, hours]) => `${name}: ${hours} h/week`).join(" · ") }),
+            el("ul", { class: "acts" }, ...quarter.actions.filter(action => action.kind !== "hidden")
+              .map(action => el("li", { text: action.text }))));
+      details.append(el("div", { class: "q" },
+        el("div", { class: "q-head" }, el("span", { class: "q-name", text: quarter.label.replace(/^Year \d /, "") })),
+        choices));
+    }
+    years.push(details);
+  }
+  return el("div", { class: "traj", "data-side": side },
+    el("div", { class: "traj-head" }, el("span", { class: "tag", text: name })),
+    el("div", { class: "card" }, el("p", { class: "label", text: "Recorded choices by year" }), ...years));
+}
+
 function renderTraj(tid, side, name, p2, showOutcomePanel) {
   const t = DATA.trajectories[tid];
   const color = getComputedStyle(document.documentElement).getPropertyValue(side === "left" ? "--a" : "--b").trim();
@@ -721,13 +744,12 @@ function renderPair(pid) {
   const A = p2 ? "Version A" : "Path A", B = p2 ? "Version B" : "Path B";
   $("tab-left").textContent = A; $("tab-right").textContent = B;
   const cols = $("cols");
-  cols.replaceChildren(renderTraj(L, "left", A, p2, showOutcomePanel), renderTraj(R, "right", B, p2, showOutcomePanel));
+  cols.replaceChildren(...(p2 ? [renderTraj(L, "left", A, p2, showOutcomePanel), renderTraj(R, "right", B, p2, showOutcomePanel)] : [renderPolicyTrajectory(L, "left", A), renderPolicyTrajectory(R, "right", B)]));
   setTab("left");
-  const realism = [["1", "1", "Very unrealistic"], ["2", "2", ""], ["3", "3", ""], ["4", "4", ""], ["5", "5", "Very realistic"]];
   const rate = $("rate");
   const tail = [
     scaleQ("sure", "How sure are you?", [["1", "Not sure", ""], ["2", "Somewhat", ""], ["3", "Very sure", ""]]),
-    el("div", { class: "field" }, el("label", { for: "note", text: p2 ? "Optional: what made one version less believable? Which year?" : "Optional: did anything seem unrealistic? Which path, which year?" }), el("textarea", { id: "note" })),
+    el("div", { class: "field" }, el("label", { for: "note", text: p2 ? "Optional: what made one version less believable? Which year?" : "Optional: which choices influenced your ranking?" }), el("textarea", { id: "note" })),
     el("p", { id: "rate-err", class: "err", hidden: "" }),
     el("div", { class: "row" }, el("button", { class: "primary", id: "submit-pair", text: n < total ? "Save and continue" : "Save" }),
       optional ? el("button", { id: "stop-now", text: "Skip this one and finish" }) : null)];
@@ -738,11 +760,7 @@ function renderPair(pid) {
     flags("a", "Version A"), flags("b", "Version B"), ...tail);
   else rate.replaceChildren(
     el("h2", { text: "Your ratings" }),
-    scaleQ("real_a", "Path A: how plausible are this student's results, and how their years are described, given what they did?", realism),
-    flags("a", "Path A"),
-    scaleQ("real_b", "Path B: how plausible are this student's results, and how their years are described, given what they did?", realism),
-    flags("b", "Path B"),
-    scaleQ("better", `Which student ended up better off, given their goals: ${s.goal_q}, and staying healthy, happy and not burned out? Answer as if both paths really happened.`,
+    scaleQ("better", `Which path would better serve this student’s goals: ${s.goal_q}, while helping them stay healthy, happy and avoid burnout? Judge from the starting profile and choices.`,
       [["A", "Path A", ""], ["same", "About the same", ""], ["B", "Path B", ""]]),
     ...tail);
   $("submit-pair").addEventListener("click", savePair);
@@ -761,15 +779,16 @@ function val(name) { const x = document.querySelector(`input[name=${name}]:check
 
 function savePair() {
   const p2 = isP2(current);
-  const a = p2 ? { realer: val("realer"), sure: val("sure") } : { real_a: val("real_a"), real_b: val("real_b"), better: val("better"), sure: val("sure") };
+  const a = p2 ? { realer: val("realer"), sure: val("sure") } : { better: val("better"), sure: val("sure") };
   if (Object.values(a).some(v => v == null)) { $("rate-err").textContent = "Please answer every question (the comment and checkboxes are optional)."; $("rate-err").hidden = false; return; }
   const [L, R] = sides(current);
   const side = (v) => v === "A" ? "left" : v === "B" ? "right" : v === "same" ? "same" : null;
   const opened = [...document.querySelectorAll("#cols .traj")].map(t => [...t.querySelectorAll("details.year")].filter(d => d.open).length);
   state.answers.push({ pair: current, part: p2 ? 2 : 1, left: L, right: R,
-    realism_left: p2 ? null : +a.real_a, realism_right: p2 ? null : +a.real_b,
+    realism_left: null, realism_right: null,
+    ...(p2 ? {} : { policy_view: "starting_state_and_actions" }),
     better: p2 ? null : side(a.better), more_realistic: p2 ? side(a.realer) : null, confidence: +a.sure, note: $("note").value.trim(),
-    flags_left: flagVals("a"), flags_right: flagVals("b"),
+    flags_left: p2 ? flagVals("a") : [], flags_right: p2 ? flagVals("b") : [],
     seconds: Math.round((Date.now() - shownAt) / 1000), years_open_at_save: opened, extra: state.plan.extra.includes(current), at: new Date().toISOString() });
   store.set(state);
   send(false);
