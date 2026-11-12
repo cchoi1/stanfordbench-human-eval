@@ -5,16 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Student Path Study</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
 <style>
 /* Layout: one reading column for instructions; a two-column comparison (stacked tabs on phones) with the rating panel below. */
 :root {
   --bg: #f6f7f8; --surface: #ffffff; --ink: #1d2328; --muted: #5d6870; --line: #dde2e6;
   --accent: #1f5f7a; --accent-soft: #e3eef3; --good: #2f7d4f; --bad: #a3402f; --warn: #a06a12;
   --a: #1f5f7a; --b: #7a4b1f;
-  --display: "Source Serif 4", Georgia, "Times New Roman", serif;
-  --body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --display: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -150,41 +148,67 @@ details.recorded-action > summary { cursor: pointer; color: var(--accent); font-
   .cols[data-show=left] .traj[data-side=right], .cols[data-show=right] .traj[data-side=left] { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+/* Four-year overview first; complete evidence stays one click away. */
+.wrap { max-width: 1120px; gap: 20px; }
+#intro { max-width: 760px; margin-inline: auto; }
+#intro .parts { gap: 12px; }
+.card { border-radius: 6px; }
+.student { gap: 8px; }
+.student .goal { background: none; padding: 0; }
+.trajectory-year { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
+.trajectory-year h3 { font: 700 1rem var(--body); }
+.year-overview { display: grid; gap: 8px; font-size: .9rem; }
+.year-overview ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.trajectory-year details.year > summary { display: block; color: var(--accent); font-size: .85rem; }
+.trajectory-year details.year > summary::after { content: " +"; }
+.trajectory-year details.year[open] > summary::after { content: " −"; }
+.trajectory-year details.year { border: 0; padding-top: 0; }
+.overview-metrics { font-size: .8rem; color: var(--muted); }
+.traj-head { position: sticky; top: 0; padding: 10px 0; background: var(--bg); z-index: 2; }
+#mode-note { background: none; border-left: 3px solid var(--accent); border-radius: 0; font-weight: 400; }
+#rate { max-width: 760px; width: 100%; margin-inline: auto; }
+#rate .scale label { min-width: 100px; flex: 1; }
+.optional-notes { display: grid; gap: 12px; }
+.optional-notes > summary { cursor: pointer; color: var(--muted); }
+.optional-notes[open] > * { margin-top: 12px; }
+#preview-banner { border: 1px solid var(--line); padding: 10px 14px; font-size: .85rem; }
+@media (max-width: 860px) {
+  .traj-head { position: static; }
+  .profile { grid-template-columns: 1fr; }
+  .pkv { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .kv { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
+<p id="preview-banner" hidden>Preview only — nothing is submitted or entered in the drawing.</p>
 
 <!-- INTRO -->
 <section id="intro" class="wrap">
   <div class="prose">
-      <p class="label" id="study-duration">Stanford student-path study · about 15 minutes</p>
-    <h1 id="study-title">How realistic are these simulated Stanford paths?</h1>
-    <p id="study-description">We built a simulator of four years at Stanford. You'll judge what it produces. Finish for a chance to win a $50 Amazon gift card.</p>
+    <p class="label" id="study-duration">Stanford student-path study · about 15 minutes</p>
+    <h1 id="study-title">Two paths through Stanford. What do you think?</h1>
+    <p id="study-description">Compare four-year paths for fictional Stanford students. Use your experience to judge their choices and how believable the outcomes are.</p>
   </div>
   <div class="parts">
     <div class="card" id="part1-intro">
-      <p class="label" id="part1-count">Part 1 · 8 comparisons · ~1–2 min each</p>
-      <p>The same student, two different sets of choices: <b>Path A</b> and <b>Path B</b>.</p>
-      <ul class="steps">
-        <li>Predict which path would leave the student <b>better off</b>, given their starting profile and choices.</li>
-      </ul>
+      <p class="label" id="part1-count">Part 1 · 8 comparisons</p>
+      <h2>Which plan is better?</h2>
+      <p>Same student, different choices. Pick the four-year plan that best serves their goals.</p>
     </div>
     <div class="card">
-      <p class="label">Part 2 · 7 comparisons · ~1 min each</p>
-      <p>Compare two versions of the same student's path. They start with the <b>same planned choices</b>, but their results and follow-up decisions can differ. Usually one comes from our simulator and one from a simpler baseline simulator, unlabeled.</p>
-      <ul class="steps">
-        <li>Pick which version is <b>more realistic</b>.</li>
-      </ul>
+      <p class="label">Part 2 · 7 comparisons</p>
+      <h2>Which path is more realistic?</h2>
+      <p>Same student and starting plans, different simulated results. Pick the more believable four-year path.</p>
     </div>
   </div>
-  <div class="card prose">
-    <h2>Tips</h2>
-    <ul class="steps small">
-      <li>Open any year to see what happened each quarter. The action details show the full recorded choices and weekly hours.</li>
-      <li id="save-tip">Answers save as you go. Afterwards you can do up to 6 more comparisons if you like.</li>
-      <li id="drawing-tip">When you finish, you can enter a drawing for a <b>$50 Amazon gift card</b>.</li>
-    </ul>
+  <div class="prose small muted">
+    <p>Read each four-year overview. Open a year's details whenever you need more context. Rate the whole path; there are no individual-quarter questions.</p>
+    <p id="save-tip">Answers save as you go. You can return on this browser to continue.</p>
+    <p id="drawing-tip">Finish for a chance to win a $50 Amazon gift card. Entry is optional.</p>
   </div>
   <div class="card prose">
     <h2>Consent</h2>
@@ -202,7 +226,7 @@ details.recorded-action > summary { cursor: pointer; color: var(--accent); font-
   </div>
   <div class="card prose">
     <h2>About you</h2>
-    <div class="field"><label for="pid" id="pid-label">Your participant number (assigned automatically; nothing to do)</label><input type="text" id="pid" readonly tabindex="-1" autocomplete="off"></div>
+    <div class="field" hidden><label for="pid" id="pid-label">Your participant number (assigned automatically; nothing to do)</label><input type="text" id="pid" readonly tabindex="-1" autocomplete="off"></div>
     <div class="field"><label for="year">Your year</label>
       <select id="year"><option value="">Choose…</option><option>Frosh</option><option>Sophomore</option><option>Junior</option><option>Senior</option><option>Coterm / 5th year</option><option>Graduate student</option><option>Other</option></select></div>
     <div class="field"><label for="area">Main area of study</label>
@@ -225,15 +249,15 @@ details.recorded-action > summary { cursor: pointer; color: var(--accent); font-
     <p class="label">The student</p>
     <h2 id="s-title"></h2>
     <p id="s-bg" class="muted"></p>
+    <details id="background-details" class="fullstate"><summary>More about this student</summary><p id="s-bg-rest" class="small muted"></p></details>
     <p id="s-goal" class="goal"></p>
     <details class="fullstate">
-      <summary>Full starting state (every variable the simulator tracks)</summary>
+      <summary>Full starting profile (optional)</summary>
       <p class="small muted">Values run from 0 to 1 (GPA on a 4.3 scale). The text after each value is the simulator's own description of that level.</p>
       <div id="s-profile" class="profile"></div>
     </details>
   </div>
-  <p id="mode-note" class="goal" hidden>Both versions start from the same planned choices. Compare what happened, including what offers came in and what the student did next.</p>
-  <div id="paired-outcomes" class="card" hidden></div>
+  <p id="mode-note" class="goal" hidden>Compare the whole four-year path: do the outcomes and follow-up decisions make sense given the student’s starting profile and choices? A good outcome is not necessarily a realistic one.</p>
   <div class="tabs" role="group" aria-label="Choose which path to read">
     <button id="tab-left" aria-pressed="true">Path A</button>
     <button id="tab-right" aria-pressed="false">Path B</button>
@@ -247,7 +271,7 @@ details.recorded-action > summary { cursor: pointer; color: var(--accent); font-
   <div class="card prose">
     <p class="label">Part 1 done</p>
     <h2>Part 2: compare what happened</h2>
-    <p>Both versions start from the <b>same planned choices</b>, such as the student's weekly schedule and applications. The results can differ, and so can the student's follow-up decisions, such as which offers they accept. On most screens, one version comes from our simulator and the other from a simpler baseline. The versions are unlabeled.</p>
+    <p>Both versions start from the <b>same planned choices</b>. Different simulators produce different results and follow-up decisions. Their identities are hidden.</p>
     <p>Pick the version whose <b>results and follow-up decisions</b> seem more realistic for a Stanford student who made those plans.</p>
     <div><button class="primary" id="p2-start">Start Part 2</button></div>
   </div>
@@ -294,12 +318,16 @@ const DATA = JSON.parse(document.getElementById("study-data").textContent);
 const SCHED = DATA.schedule;
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
+const UI_VERSION = "full-trajectories-v1";
+const PREVIEW = params.get("preview") === "1";
+$("preview-banner").hidden = !PREVIEW;
+if (PREVIEW) $("drawing").hidden = true;
 const urlPid = params.get("r") || params.get("p") || (location.hash.match(/^#r(\d+)$/) || [])[1];
 const redoMode = SCHED.shared_policy_raters.includes(Number(urlPid)) ? params.get("redo") : null;
 const CONTRAST_REDO = redoMode === "part-b-contrast";
 const PART_B_REDO = CONTRAST_REDO || redoMode === "part-b";
 const REDO_ROUND = CONTRAST_REDO ? "part_b_redo_contrast" : "part_b_redo";
-const STATE_KEY = PART_B_REDO ? "spstudy:" + REDO_ROUND.replaceAll("_", "-") + ":" + Number(urlPid) : "spstudy:state";
+const STATE_KEY = (PREVIEW ? "preview:" : "") + (PART_B_REDO ? "spstudy:" + REDO_ROUND.replaceAll("_", "-") + ":" + Number(urlPid) : "spstudy:state");
 const store = {
   get() { try { return JSON.parse(localStorage.getItem(STATE_KEY)); } catch (e) { return null; } },
   set(v) { try { localStorage.setItem(STATE_KEY, JSON.stringify(v)); } catch (e) {} },
@@ -333,7 +361,7 @@ if (PART_B_REDO) {
 } else if (hasSharedPolicy(urlPid || (state && state.pid))) {
   $("study-duration").textContent = "Stanford student-path study · about 25–35 minutes";
   $("consent-duration").textContent = "25–35 minutes";
-  $("part1-count").textContent = "Part 1 · 15 comparisons · ~1–2 min each";
+  $("part1-count").textContent = "Part 1 · 15 comparisons";
 }
 
 function planFor(pid, contrast = PART_B_REDO ? CONTRAST_REDO : SCHED.default_part2_set === "higher_contrast") {
@@ -377,8 +405,8 @@ async function startStudy() {
   if (err.length) { $("intro-err").textContent = err.join(" "); $("intro-err").hidden = false; return; }
   if (!state || state.pid !== pid) {
     const plan = planFor(pid);
-    state = { pid, plan, build: DATA.build, source: SOURCE, about: { year: $("year").value, area: $("area").value, path: $("path").value },
-      part2_layout: "paired_outcomes",
+    state = { ui_version: UI_VERSION, pid, plan, build: DATA.build, source: SOURCE, about: { year: $("year").value, area: $("area").value, path: $("path").value },
+      part2_layout: "four_year_overview",
       p2_intro_seen: PART_B_REDO,
       started: new Date().toISOString(), queue: plan.required.slice(), answers: [], extra: false, finished: false, ua: navigator.userAgent };
     store.set(state);
@@ -443,59 +471,28 @@ function el(tag, attrs, ...kids) {
   return e;
 }
 
-function resultClass(r) {
-  if (!r) return "neutral";
-  if (/rejected|did not pass/.test(r)) return "no";
-  return "ok";
+function firstSentences(text, count) {
+  // Find boundaries, then slice the original so decimals and unfinished sentences survive.
+  const boundaries = text.matchAll(/[.!?]+(?=\s|$)/g);
+  for (const boundary of boundaries) {
+    if (--count === 0) {
+      const end = boundary.index + boundary[0].length;
+      return [text.slice(0, end).trim(), text.slice(end).trim()];
+    }
+  }
+  return [text.trim(), ""];
 }
 
-function spark(label, vals, color, unit) {
-  const w = 150, h = 34, pad = 3;
-  const lo = 0, hi = 1;
-  const pts = vals.map((v, i) => [pad + i * (w - 2 * pad) / (vals.length - 1), h - pad - (v - lo) / (hi - lo || 1) * (h - 2 * pad)]);
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", `0 0 ${w} ${h}`); svg.setAttribute("preserveAspectRatio", "none"); svg.setAttribute("aria-hidden", "true");
-  const area = document.createElementNS(svg.namespaceURI, "path");
-  area.setAttribute("d", `M${pts[0][0]},${h - pad} ` + pts.map(p => `L${p[0]},${p[1]}`).join(" ") + ` L${pts[pts.length - 1][0]},${h - pad} Z`);
-  area.setAttribute("fill", color); area.setAttribute("fill-opacity", "0.12");
-  const line = document.createElementNS(svg.namespaceURI, "path");
-  line.setAttribute("d", pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join(" "));
-  line.setAttribute("fill", "none"); line.setAttribute("stroke", color); line.setAttribute("stroke-width", "1.6");
-  const dot = document.createElementNS(svg.namespaceURI, "circle");
-  dot.setAttribute("cx", pts[pts.length - 1][0]); dot.setAttribute("cy", pts[pts.length - 1][1]); dot.setAttribute("r", "2.6"); dot.setAttribute("fill", color);
-  svg.append(area, line, dot);
-  const first = vals[0], last = vals[vals.length - 1];
-  return el("div", { class: "spark" },
-    el("div", { class: "row", style: "justify-content:space-between" }, el("span", { text: label }), el("span", { class: "v", text: `${first.toFixed(2)} → ${last.toFixed(2)}` })),
-    svg);
-}
-
-function isWin(r) { return r && !/rejected|did not pass|no placement/.test(r); }
-function firstSentences(t, n) { const m = t.match(/[^.!?]+[.!?]+(\s|$)/g) || [t]; return [m.slice(0, n).join("").trim(), m.slice(n).join("").trim()]; }
-
-// The year at a glance: average weekly time, then everything they applied for, submitted, entered or took, with results,
-// then what they accepted and any test scores. No success/rejection counts, so busy paths don't look better by volume.
+// Average recorded workload over all quarters in the year, including summer when present.
 function yearSummary(qs) {
   const hours = {}; let busy = 0, sleep = 0;
   for (const q of qs) {
     busy += q.time.busy; sleep += q.time.sleep_per_night;
     for (const [k, h] of q.time.top) hours[k] = (hours[k] || 0) + h;
   }
-  const top = Object.entries(hours).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, h]) => `${k.toLowerCase()} ~${Math.round(h / qs.length)}h`);
-  const weekly = `Average week this year${qs.length === 4 ? " (including summer)" : ""}: about ${Math.round(busy / qs.length)} h on classes, work and activities (mostly ${top.join(", ")}); sleeps ~${Math.round(sleep / qs.length)}h a night`;
-  const did = [], took = [];
-  for (const q of qs) {
-    for (const a of q.actions) {
-      if (["apply", "submit", "compete", "test", "found", "major"].includes(a.kind)) did.push({ text: a.text, result: a.result });
-      else if (a.kind === "accept") took.push(a.text);
-    }
-    for (const r of q.received) took.push(r);
-  }
-  // Tally of outcomes. Shown only in Part 2, where both versions made the same applications,
-  // so the counts differ only in results (in Part 1 they would reward simply applying more).
-  const res = did.filter(d => d.result && !/^Declared/.test(d.text));
-  const won = res.filter(d => isWin(d.result)).length;
-  return { weekly, did, took, tally: { n: res.length, won, lost: res.length - won } };
+  const top = Object.entries(hours).sort((a, b) => b[1] - a[1]).slice(0, 3)
+    .map(([k, h]) => `${k.toLowerCase()} ${h / qs.length < 1 ? "<1" : "~" + Math.round(h / qs.length)}h`);
+  return { weekly: `Average ${Math.round(busy / qs.length)} h/week on classes, work and activities: ${top.join(", ")}. Sleep ~${Math.round(sleep / qs.length)}h/night.` };
 }
 
 function actionLabel(key) {
@@ -538,7 +535,8 @@ function actionList(actions, emptyText) {
   }));
 }
 
-function recordedActions(action, label = "Exact actions and weekly hours") {
+function recordedActions(action, label = "Full choices and weekly hours") {
+  if (!action) return el("p", { class: "small muted", text: "Full recorded choices are unavailable for this quarter." });
   const activities = Object.entries(action.time_allocation).flatMap(([name, value]) =>
     (Array.isArray(value) ? value : [value]).map(entry => activityEntry(name, entry)));
   return el("details", { class: "recorded-action" },
@@ -550,155 +548,76 @@ function recordedActions(action, label = "Exact actions and weekly hours") {
       actionList(action.structural_actions, "No actions recorded.")));
 }
 
-function outcomeTable(rows, label) {
-  const headers = el("tr", {}, ...[label, "Version A", "Version B"].map(text => el("th", { scope: "col", text })));
-  return el("table", { class: "outcome-table" }, el("thead", {}, headers),
-    el("tbody", {}, ...rows.map(([name, a, b]) => el("tr", {},
-      el("th", { scope: "row", text: name }), el("td", {}, a), el("td", {}, b)))));
+// Summaries use the recorded data, never a model-generated judgment or source label.
+// The same chronological truncation and complete detail view apply to both sides.
+function overviewChoices(qs, outcomes) {
+  return qs.flatMap(q => [
+    ...q.actions.filter(a => a.kind !== "hidden").map(a =>
+      `${q.label.replace(/^Year \d /, "")}: ${a.text}${outcomes && a.result ? " → " + a.result : ""}`),
+    ...(outcomes ? q.received.map(r => `${q.label.replace(/^Year \d /, "")}: ${r}`) : []),
+  ]);
 }
 
-function isFollowUpAction(action) {
-  return action.name === "respond_to_opportunity" || action.name === "drop_position";
+function quarterDetail(q, outcomes) {
+  const acts = el("ul", { class: "acts" },
+    ...q.actions.filter(a => a.kind !== "hidden").map(a => el("li", {
+      text: a.text + (outcomes && a.result ? " → " + a.result : "") })),
+    ...(outcomes ? q.received.map(text => el("li", { text })) : []));
+  const time = `Classes, work and activities: ${q.time.busy} h/week · sleep: ${q.time.sleep_per_night.toFixed(1)} h/night`;
+  return el("section", { class: "q" },
+    el("h3", { class: "q-name", text: q.label }),
+    el("p", { class: "time", text: time }),
+    acts.children.length ? acts : null,
+    recordedActions(q.recorded_action),
+    outcomes ? el("p", { class: "metrics", text: `GPA ${q.m.gpa.toFixed(2)} · stress ${q.m.stress.toFixed(2)} · mood ${q.m.mood.toFixed(2)}` }) : null,
+    outcomes ? el("p", { class: "narr", text: q.narrative }) : null);
 }
 
-function quarterOutcomes(quarter) {
-  const actions = quarter.recorded_action.structural_actions;
-  const planned = quarter.actions.filter((_, i) => !isFollowUpAction(actions[i]));
-  const received = [...quarter.actions.filter(action => action.kind === "accept").map(action => action.text), ...quarter.received];
-  return { planned, received, followUp: actions.filter(isFollowUpAction) };
-}
-
-function pairedOutcomes(left, right) {
-  const a = left.final, b = right.final;
-  const placement = f => f.destination.join("; ") || "No accepted placement in the goal area";
-  const listed = items => items.join("; ") || "None listed";
-  const graduated = f => f.graduated ? "Yes" : "No";
-  const final = outcomeTable([
-    ["Career outcome", placement(a), placement(b)],
-    ["Other accepted placements", listed(a.other_accepted), listed(b.other_accepted)],
-    ["Graduated", graduated(a), graduated(b)],
-    ["Final GPA", a.gpa.toFixed(2), b.gpa.toFixed(2)],
-    ["Test scores", listed(a.tests), listed(b.tests)],
-  ], "End of college");
-
-  const quarters = left.quarters.flatMap((q, i) => {
-    const l = quarterOutcomes(q), r = quarterOutcomes(right.quarters[i]);
-    const rows = l.planned.flatMap((action, j) => {
-      const other = r.planned[j];
-      if (!action.result && !other.result) return [];
-      const label = action.text === other.text ? action.text : "Result " + (j + 1);
-      return [[label,
-        action.text === other.text ? action.result || "No result listed" : action.text + " · " + (action.result || "No result listed"),
-        action.text === other.text ? other.result || "No result listed" : other.text + " · " + (other.result || "No result listed")]];
-    });
-    if (l.received.length || r.received.length) rows.push(["Offers, acceptances and scores", listed(l.received), listed(r.received)]);
-    if (l.followUp.length || r.followUp.length) rows.push(["Recorded offer and position decisions",
-      actionList(l.followUp, "None recorded"), actionList(r.followUp, "None recorded")]);
-    return rows.length ? [outcomeTable(rows, q.label)] : [];
-  });
-  const sharedPlan = el("details", { class: "outcome-years" },
-    el("summary", { text: "Shared schedule and planned actions" }),
-    el("p", { class: "muted small", text: "These are the shared plans. See the quarter-by-quarter results for follow-up decisions." }),
-    ...left.quarters.map(q => recordedActions({
-      time_allocation: q.recorded_action.time_allocation,
-      structural_actions: q.recorded_action.structural_actions.filter(action => !isFollowUpAction(action)),
-    }, q.label)));
-  return [
-    el("h2", { text: "Outcomes side by side" }),
-    final,
-    el("details", { class: "outcome-years" }, el("summary", { text: "Compare results quarter by quarter" }),
-      ...(quarters.length ? quarters : [el("p", { text: "No application results, offers or scores are listed." })])),
-    sharedPlan,
-  ];
-}
-
-function renderPolicyTrajectory(tid, side, name) {
-  const { quarters } = DATA.trajectories[tid];
-  const years = [];
-  for (let year = 0; year < 4; year++) {
-    const details = el("details", { class: "year" },
-      el("summary", {}, el("span", { class: "yname", text: `Year ${year + 1}` })));
-    for (const quarter of quarters.slice(year * 4, year * 4 + 4)) {
-      const choices = quarter.recorded_action
-        ? recordedActions(quarter.recorded_action)
-        : el("div", {},
-            el("p", { text: quarter.time.top.map(([name, hours]) => `${name}: ${hours} h/week`).join(" · ") }),
-            el("ul", { class: "acts" }, ...quarter.actions.filter(action => action.kind !== "hidden")
-              .map(action => el("li", { text: action.text }))));
-      details.append(el("div", { class: "q" },
-        el("div", { class: "q-head" }, el("span", { class: "q-name", text: quarter.label.replace(/^Year \d /, "") })),
-        choices));
-    }
-    years.push(details);
-  }
-  return el("div", { class: "traj", "data-side": side },
-    el("div", { class: "traj-head" }, el("span", { class: "tag", text: name })),
-    el("div", { class: "card" }, el("p", { class: "label", text: "Recorded choices by year" }), ...years));
-}
-
-function renderTraj(tid, side, name, p2, showOutcomePanel) {
+function trajectoryOverview(tid, side, name, outcomes) {
   const t = DATA.trajectories[tid];
-  const color = getComputedStyle(document.documentElement).getPropertyValue(side === "left" ? "--a" : "--b").trim();
-  const f = t.final;
-  const kv = el("dl", { class: "kv" },
-    el("dt", { text: "Ends up" }), el("dd", { class: "dest", text: f.destination.length ? f.destination.join("; ") : "No job or admission in their goal area" }),
-    el("dt", { text: "Major" }), el("dd", { text: f.major || "—" }),
-    el("dt", { text: "Final GPA" }), el("dd", { text: f.gpa.toFixed(2) + (f.gpa > 4 ? " (Stanford counts an A+ as 4.3)" : "") }),
-    el("dt", { text: "Graduated" }), el("dd", { class: f.graduated ? "" : "res no", text: f.graduated ? "Yes" : "No" }));
-  if (f.destination.length > 1) kv.append(el("dt", { text: "Final offers accepted" }), el("dd", { class: "res no", text: `${f.destination.length} (accepted more than one)` }));
-  if (f.tests.length) kv.append(el("dt", { text: "Test scores" }), el("dd", { text: f.tests.join("; ") }));
-  if (f.highlights.length) {
-    const dd = el("dd", { class: "small" });
-    for (let y = 1; y <= 4; y++) {
-      const items = f.highlights.filter(h => h.year === y);
-      if (items.length) dd.append(el("p", { class: "hyear", text: `Year ${y}` }), el("ul", { class: "highlights" }, ...items.map(h => el("li", { text: h.text }))));
-    }
-    kv.append(el("dt", { text: "Results" }), dd);
-  }
-  const series = (k) => [t.start[k], ...t.quarters.map(q => q.m[k])];
-  const sparks = el("div", { class: "spark-grid" }, spark("Stress (lower is better)", series("stress"), color, ""), spark("Mood (higher is better)", series("mood"), color, ""));
-  const outcome = el("div", { class: "card outcome" }, el("p", { class: "label", text: "After 4 years" }), kv,
-    el("p", { class: "label", text: "Over 4 years (0–1)" }), sparks,
-    el("p", { class: "muted small", text: "Stress: 0.40 means busy but coping; 0.60 means stretched thin; 0.80 means struggling." }));
-
-  const years = [];
+  const card = el("div", { class: "card" },
+    el("p", { class: "small muted", text: outcomes
+      ? "Choices and results across all four years. Full records are below each overview."
+      : "Choices across all four years. Predict their effects; simulated results are hidden." }));
   for (let y = 0; y < 4; y++) {
     const qs = t.quarters.slice(y * 4, y * 4 + 4);
-    const sm = yearSummary(qs);
-    const tally = p2 && sm.tally.n ? el("span", { class: "ytally" }, `Applications, submissions and tests: ${sm.tally.n} → `,
-      el("span", { class: sm.tally.won ? "res ok" : "muted", text: `${sm.tally.won} succeeded` }), ", ", el("span", { class: sm.tally.lost ? "res no" : "muted", text: `${sm.tally.lost} rejected` })) : null;
-    const sumLine = showOutcomePanel ? null : el("span", { class: "ysum" }, tally,
-      el("span", { class: "ynotes", text: sm.weekly }),
-      sm.did.length ? el("ul", { class: "ylist" }, ...sm.did.map(d => el("li", {}, d.text, d.result ? " → " : "", d.result ? el("span", { class: "res " + (isWin(d.result) ? "ok" : "no"), text: d.result }) : null))) : el("span", { class: "ynotes", text: "No applications, submissions or tests this year." }),
-      sm.took.length ? el("ul", { class: "ylist ytook" }, ...sm.took.map(t => el("li", { text: t }))) : null);
-    const d = el("details", { class: "year" }, el("summary", {}, el("span", { class: "yname", text: `Year ${y + 1}` }), sumLine));
-    for (const q of qs) {
-      const tm = q.time;
-      const time = `About ${tm.busy} h/week on classes, work and activities, mostly ` + tm.top.map(x => `${x[0].toLowerCase()} ${x[1]}h`).join(", ") + ` · sleeps ~${Math.round(tm.sleep_per_night)}h a night`;
-      const acts = el("ul", { class: "acts" });
-      for (const a of q.actions) if (a.kind !== "hidden") acts.append(el("li", {}, a.text, a.result ? " → " : "", a.result ? el("span", { class: "res " + (isWin(a.result) ? "ok" : "no"), text: a.result }) : null));
-      for (const r of q.received) acts.append(el("li", { class: "recv", text: r }));
-      const recorded = showOutcomePanel ? null : recordedActions(q.recorded_action);
-      const [head, rest] = firstSentences(q.narrative, 2);
-      const narr = el("p", { class: "narr" }, head);
-      if (rest) {
-        const more = el("button", { class: "linkish", type: "button", text: "more" });
-        const tail = el("span", { hidden: "" }, " " + rest);
-        more.addEventListener("click", () => { tail.hidden = false; more.remove(); });
-        narr.append(tail, " ", more);
-      }
-      d.append(el("div", { class: "q" },
-        el("div", { class: "q-head" }, el("span", { class: "q-name", text: q.label.replace(/^Year \d /, "") }),
-          el("span", { class: "metrics", text: `GPA ${q.m.gpa.toFixed(2)} · stress ${q.m.stress.toFixed(2)} · mood ${q.m.mood.toFixed(2)}` })),
-        showOutcomePanel ? null : el("p", { class: "time", text: time }),
-        recorded, !showOutcomePanel && acts.children.length ? acts : null, narr));
-    }
-    years.push(d);
+    if (!qs.length) continue;
+    const sm = yearSummary(qs), choices = overviewChoices(qs, outcomes);
+    const details = el("details", { class: "year" },
+      el("summary", { text: `All ${qs.length} quarters${choices.length > 3 ? ` · ${choices.length - 3} more listed choices${outcomes ? " / results" : ""}` : ""}` }),
+      ...qs.map(q => quarterDetail(q, outcomes)));
+    const end = qs[qs.length - 1].m;
+    const start = y ? t.quarters[y * 4 - 1].m : t.start;
+    card.append(el("section", { class: "trajectory-year" },
+      el("h3", { text: `Year ${y + 1}` }),
+      el("div", { class: "year-overview" },
+        el("p", { text: sm.weekly }),
+        choices.length ? el("ul", {}, ...choices.slice(0, 3).map(text => el("li", { text })))
+          : el("p", { class: "muted", text: "No separate applications or decisions listed; see the weekly schedule in details." }),
+        outcomes ? el("p", { class: "overview-metrics", text:
+          `Start → end of year: GPA ${start.gpa.toFixed(2)} → ${end.gpa.toFixed(2)} · stress ${start.stress.toFixed(2)} → ${end.stress.toFixed(2)} · mood ${start.mood.toFixed(2)} → ${end.mood.toFixed(2)}` }) : null),
+      details));
   }
-  const yearsCard = el("div", { class: "card" }, el("p", { class: "label", text: "Year by year (open a year for each quarter)" }), ...years);
-  return el("div", { class: "traj", "data-side": side },
-    el("div", { class: "traj-head" }, el("span", { class: "tag", text: name })), outcome, yearsCard);
+  const path = el("div", { class: "traj", "data-side": side },
+    el("div", { class: "traj-head" }, el("h2", { class: "tag", text: name })), card);
+  if (outcomes) {
+    const f = t.final;
+    const kv = el("dl", { class: "kv" },
+      el("dt", { text: "Placement" }), el("dd", { text: f.destination.join("; ") || "No accepted placement in the goal area" }),
+      el("dt", { text: "Major" }), el("dd", { text: f.major || "Not listed" }),
+      el("dt", { text: "GPA" }), el("dd", { text: f.gpa.toFixed(2) }),
+      el("dt", { text: "Graduated" }), el("dd", { text: f.graduated ? "Yes" : "No" }));
+    if (f.other_accepted?.length) kv.append(el("dt", { text: "Other accepted placements" }), el("dd", { text: f.other_accepted.join("; ") }));
+    if (f.tests.length) kv.append(el("dt", { text: "Tests" }), el("dd", { text: f.tests.join("; ") }));
+    const more = el("details", { class: "fullstate" }, el("summary", { text: "Recorded accomplishments" }),
+      el("ul", { class: "highlights" }, ...f.highlights.map(h => el("li", { text: `Year ${h.year}: ${h.text}` }))));
+    path.append(el("div", { class: "card outcome" }, el("h3", { text: "After four years" }), kv, f.highlights.length ? more : null));
+  }
+  return path;
 }
+
+function renderPolicyTrajectory(tid, side, name) { return trajectoryOverview(tid, side, name, false); }
+function renderTraj(tid, side, name) { return trajectoryOverview(tid, side, name, true); }
 
 const FLAGS = [["too_good", "An outcome seems too good"], ["too_harsh", "An outcome seems too harsh"],
   ["numbers", "Numbers don't add up"], ["contradiction", "The story contradicts the listed results"]];
@@ -728,28 +647,33 @@ function renderPair(pid) {
   $("progress-label").textContent = optional ? `Extra comparison ${plan.extra.indexOf(pid) + 1} of ${plan.extra.length}`
     : p2 ? `Part 2 · comparison ${plan.part2.indexOf(pid) + 1} of ${plan.part2.length}`
     : `Part 1 · comparison ${plan.required.indexOf(pid) + 1} of ${nP1}`;
-  $("mode-note").hidden = !p2;
+  $("mode-note").hidden = false;
+  $("mode-note").textContent = p2
+    ? "Which whole path is more realistic? Consider how choices lead to outcomes, not just how successful the student is. Stress and mood use a 0–1 scale; lower stress and higher mood are better. GPA uses Stanford’s 4.3 scale."
+    : "Which four-year plan best serves this student’s goals? Consider both career prospects and wellbeing. Simulated outcomes are hidden so you can make your own prediction.";
   $("progress-fill").style.width = `${Math.min(100, 100 * (n - 1) / total)}%`;
   $("s-title").textContent = s.title;
-  $("s-bg").textContent = s.background;
+  const [background, rest] = firstSentences(s.background, 2);
+  $("s-bg").textContent = background;
+  $("s-bg-rest").textContent = rest;
+  $("background-details").hidden = !rest;
+  $("background-details").open = false;
   $("s-profile").replaceChildren(...s.profile.map(g => el("div", { class: "pgroup" }, el("p", { class: "pgtitle", text: g.title }),
     el("dl", { class: "pkv" }, ...g.rows.flatMap(r => [el("dt", { text: r.label }),
       el("dd", {}, el("b", { text: r.value }), r.meaning ? el("span", { class: "muted", text: " " + r.meaning }) : null)])))));
   $("s-goal").textContent = s.goal;
   const [L, R] = sides(pid);
-  const outcomePanel = $("paired-outcomes");
-  const showOutcomePanel = p2 && state.part2_layout === "paired_outcomes";
-  outcomePanel.hidden = !showOutcomePanel;
-  outcomePanel.replaceChildren(...(showOutcomePanel ? pairedOutcomes(DATA.trajectories[L], DATA.trajectories[R]) : []));
   const A = p2 ? "Version A" : "Path A", B = p2 ? "Version B" : "Path B";
   $("tab-left").textContent = A; $("tab-right").textContent = B;
   const cols = $("cols");
-  cols.replaceChildren(...(p2 ? [renderTraj(L, "left", A, p2, showOutcomePanel), renderTraj(R, "right", B, p2, showOutcomePanel)] : [renderPolicyTrajectory(L, "left", A), renderPolicyTrajectory(R, "right", B)]));
+  cols.replaceChildren(...(p2 ? [renderTraj(L, "left", A), renderTraj(R, "right", B)] : [renderPolicyTrajectory(L, "left", A), renderPolicyTrajectory(R, "right", B)]));
   setTab("left");
   const rate = $("rate");
   const tail = [
     scaleQ("sure", "How sure are you?", [["1", "Not sure", ""], ["2", "Somewhat", ""], ["3", "Very sure", ""]]),
-    el("div", { class: "field" }, el("label", { for: "note", text: p2 ? "Optional: what made one version less believable? Which year?" : "Optional: which choices influenced your ranking?" }), el("textarea", { id: "note" })),
+    el("details", { class: "optional-notes" }, el("summary", { text: "Add a comment or flag an issue (optional)" }),
+      ...(p2 ? [flags("a", "Version A"), flags("b", "Version B")] : []),
+      el("div", { class: "field" }, el("label", { for: "note", text: p2 ? "What seemed less believable? Which year?" : "Which choices influenced your ranking?" }), el("textarea", { id: "note" }))),
     el("p", { id: "rate-err", class: "err", hidden: "" }),
     el("div", { class: "row" }, el("button", { class: "primary", id: "submit-pair", text: n < total ? "Save and continue" : "Save" }),
       optional ? el("button", { id: "stop-now", text: "Skip this one and finish" }) : null)];
@@ -757,9 +681,9 @@ function renderPair(pid) {
     el("h2", { text: "Your rating" }),
     scaleQ("realer", "Which version is more realistic? Consider the whole record, including offers, rejections, the student's follow-up decisions, and where they end up.",
       [["A", "Version A", ""], ["same", "About the same", ""], ["B", "Version B", ""]]),
-    flags("a", "Version A"), flags("b", "Version B"), ...tail);
+    ...tail);
   else rate.replaceChildren(
-    el("h2", { text: "Your ratings" }),
+    el("h2", { text: "Your rating" }),
     scaleQ("better", `Which path would better serve this student’s goals: ${s.goal_q}, while helping them stay healthy, happy and avoid burnout? Judge from the starting profile and choices.`,
       [["A", "Path A", ""], ["same", "About the same", ""], ["B", "Path B", ""]]),
     ...tail);
@@ -789,18 +713,19 @@ function savePair() {
     ...(p2 ? {} : { policy_view: "starting_state_and_actions" }),
     better: p2 ? null : side(a.better), more_realistic: p2 ? side(a.realer) : null, confidence: +a.sure, note: $("note").value.trim(),
     flags_left: p2 ? flagVals("a") : [], flags_right: p2 ? flagVals("b") : [],
+    ui_version: UI_VERSION, trajectory_view: "four_year_overview",
     seconds: Math.round((Date.now() - shownAt) / 1000), years_open_at_save: opened, extra: state.plan.extra.includes(current), at: new Date().toISOString() });
   store.set(state);
   send(false);
   next();
 }
 
-function payload(final) { return { study: "career_planning_final_v1", build: DATA.build, source: state.source || SOURCE, pid: state.pid, about: state.about, started: state.started, final, ua: state.ua, part2_layout: state.part2_layout || "original", part2_set: state.plan.part2Set || "original", ...(PART_B_REDO ? { round: REDO_ROUND } : {}), answers: state.answers, send_log: state.send_log || [] }; }
+function payload(final) { return { ui_version: UI_VERSION, study: "career_planning_final_v1", build: DATA.build, source: state.source || SOURCE, pid: state.pid, about: state.about, started: state.started, final, ua: state.ua, part2_layout: "four_year_overview", part2_set: state.plan.part2Set || "original", ...(PART_B_REDO ? { round: REDO_ROUND } : {}), answers: state.answers, send_log: state.send_log || [] }; }
 
 // Saving. Each save sends everything answered so far. The request uses CORS so the page can read the
 // script's "ok" reply and know the row landed (a blind no-cors post cannot tell). Failures are retried,
 // written into send_log (which travels in the payload and the copy code), and retried on the next load.
-const SAVING = !!SUBMIT_URL && !SUBMIT_URL.startsWith("__");
+const SAVING = !PREVIEW && !!SUBMIT_URL && !SUBMIT_URL.startsWith("__");
 async function postOnce(body) {
   const r = await fetch(SUBMIT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body });
   const t = await r.text();
@@ -899,7 +824,7 @@ $("start").addEventListener("click", startStudy);
 // kept in this browser so a reload doesn't change it.
 async function autoAssign() {
   let pid = null;
-  try { pid = parseInt(localStorage.getItem("spstudy:auto_pid"), 10) || null; } catch (e) {}
+  try { pid = parseInt(localStorage.getItem(PREVIEW ? "preview:auto_pid" : "spstudy:auto_pid"), 10) || null; } catch (e) {}
   if (!pid && SAVING) {
     try {
       const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 4000);
@@ -909,7 +834,7 @@ async function autoAssign() {
     } catch (e) {}
   }
   if (!pid) pid = 1000 + Math.floor(Math.random() * 999000);
-  try { localStorage.setItem("spstudy:auto_pid", String(pid)); } catch (e) {}
+  try { localStorage.setItem(PREVIEW ? "preview:auto_pid" : "spstudy:auto_pid", String(pid)); } catch (e) {}
   $("pid").value = pid; $("pid").readOnly = true;
   $("pid-label").textContent = "Your participant number (assigned automatically; nothing to do)";
 }
