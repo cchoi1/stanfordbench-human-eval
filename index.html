@@ -202,7 +202,7 @@ details.recorded-action > summary { cursor: pointer; color: var(--accent); font-
     <div class="card">
       <p class="label">Part 2 · 7 comparisons</p>
       <h2>Which path is more realistic?</h2>
-      <p>Same student and starting plans, different simulated results. Pick the more believable four-year path.</p>
+      <p>Same student and starting plans, different simulated results. Pick the more believable four-year path. You’ll open at least one year of each version before answering.</p>
     </div>
   </div>
   <div class="prose small muted">
@@ -318,7 +318,7 @@ const DATA = JSON.parse(document.getElementById("study-data").textContent);
 const SCHED = DATA.schedule;
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
-const UI_VERSION = "full-trajectories-v1";
+const UI_VERSION = "full-trajectories-v2";
 const PREVIEW = params.get("preview") === "1";
 $("preview-banner").hidden = !PREVIEW;
 if (PREVIEW) $("drawing").hidden = true;
@@ -649,7 +649,7 @@ function renderPair(pid) {
     : `Part 1 · comparison ${plan.required.indexOf(pid) + 1} of ${nP1}`;
   $("mode-note").hidden = false;
   $("mode-note").textContent = p2
-    ? "Which whole path is more realistic? Consider how choices lead to outcomes, not just how successful the student is. Stress and mood use a 0–1 scale; lower stress and higher mood are better. GPA uses Stanford’s 4.3 scale."
+    ? "Which whole path is more realistic? A happier or more successful path is not automatically more believable: check whether results, stress and mood follow from what the student actually did. Open at least one year of each version (any year) before answering. Stress and mood use a 0–1 scale; lower stress and higher mood are better. GPA uses Stanford’s 4.3 scale."
     : "Which four-year plan best serves this student’s goals? Consider both career prospects and wellbeing. Simulated outcomes are hidden so you can make your own prediction.";
   $("progress-fill").style.width = `${Math.min(100, 100 * (n - 1) / total)}%`;
   $("s-title").textContent = s.title;
@@ -668,6 +668,8 @@ function renderPair(pid) {
   const cols = $("cols");
   cols.replaceChildren(...(p2 ? [renderTraj(L, "left", A), renderTraj(R, "right", B)] : [renderPolicyTrajectory(L, "left", A), renderPolicyTrajectory(R, "right", B)]));
   setTab("left");
+  // Part 2 asks raters to read at least one year's full record on each side; remember any year ever opened.
+  cols.querySelectorAll("details.year").forEach(d => d.addEventListener("toggle", () => { if (d.open) d.dataset.seen = "1"; }));
   const rate = $("rate");
   const tail = [
     scaleQ("sure", "How sure are you?", [["1", "Not sure", ""], ["2", "Somewhat", ""], ["3", "Very sure", ""]]),
@@ -705,6 +707,11 @@ function savePair() {
   const p2 = isP2(current);
   const a = p2 ? { realer: val("realer"), sure: val("sure") } : { better: val("better"), sure: val("sure") };
   if (Object.values(a).some(v => v == null)) { $("rate-err").textContent = "Please answer every question (the comment and checkboxes are optional)."; $("rate-err").hidden = false; return; }
+  const seen = [...document.querySelectorAll("#cols .traj")].map(t => [...t.querySelectorAll("details.year")].filter(d => d.dataset.seen).length);
+  if (p2 && seen.some(n => n === 0)) {
+    const missing = seen.map((n, i) => n === 0 ? (i ? "Version B" : "Version A") : null).filter(Boolean).join(" and ");
+    $("rate-err").textContent = `Please open at least one year of ${missing} before answering.`; $("rate-err").hidden = false; return;
+  }
   const [L, R] = sides(current);
   const side = (v) => v === "A" ? "left" : v === "B" ? "right" : v === "same" ? "same" : null;
   const opened = [...document.querySelectorAll("#cols .traj")].map(t => [...t.querySelectorAll("details.year")].filter(d => d.open).length);
@@ -714,7 +721,7 @@ function savePair() {
     better: p2 ? null : side(a.better), more_realistic: p2 ? side(a.realer) : null, confidence: +a.sure, note: $("note").value.trim(),
     flags_left: p2 ? flagVals("a") : [], flags_right: p2 ? flagVals("b") : [],
     ui_version: UI_VERSION, trajectory_view: "four_year_overview",
-    seconds: Math.round((Date.now() - shownAt) / 1000), years_open_at_save: opened, extra: state.plan.extra.includes(current), at: new Date().toISOString() });
+    seconds: Math.round((Date.now() - shownAt) / 1000), years_open_at_save: opened, years_opened: seen, extra: state.plan.extra.includes(current), at: new Date().toISOString() });
   store.set(state);
   send(false);
   next();
